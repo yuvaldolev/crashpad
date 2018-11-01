@@ -323,7 +323,7 @@ TEST(ProcessSnapshotMinidump, Modules) {
   for (uint32_t i = 0; i < minidump_module_count; i++) {
     name_rvas[i] = static_cast<RVA>(string_file.SeekGet());
     auto name16 = base::UTF8ToUTF16(names[i]);
-    uint32_t size = sizeof(name16[0]) * name16.size();
+    uint32_t size = (uint32_t)(sizeof(name16[0]) * name16.size());
     EXPECT_TRUE(string_file.Write(&size, sizeof(size)));
     EXPECT_TRUE(string_file.Write(&name16[0], size));
   }
