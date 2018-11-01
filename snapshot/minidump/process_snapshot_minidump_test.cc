@@ -1066,7 +1066,7 @@ TEST(ProcessSnapshotMinidump, Stacks) {
     '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
   };
 
-  minidump_thread.Stack.Memory.DataSize = minidump_stack.size();
+  minidump_thread.Stack.Memory.DataSize = (uint32_t)minidump_stack.size();
   minidump_thread.Stack.Memory.Rva = static_cast<RVA>(string_file.SeekGet());
 
   EXPECT_TRUE(string_file.Write(minidump_stack.data(), minidump_stack.size()));
