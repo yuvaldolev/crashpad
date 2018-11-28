@@ -39,20 +39,6 @@ namespace crashpad {
 
 namespace {
 
-UUID UUIDFromReportPath(const base::FilePath& path) {
-  UUID uuid;
-  uuid.InitializeFromString(path.RemoveFinalExtension().BaseName().value());
-  return uuid;
-}
-
-bool AttachmentNameIsOK(const std::string& name) {
-  for (const char c : name) {
-    if (c != '_' && c != '-' && c != '.' && !isalnum(c))
-      return false;
-  }
-  return true;
-}
-
 constexpr wchar_t kReportsDirectory[] = L"reports";
 constexpr wchar_t kMetadataFileName[] = L"metadata";
 constexpr wchar_t kAttachmentsDirectory[] = L"attachments";
@@ -633,7 +619,8 @@ class CrashReportDatabaseWin : public CrashReportDatabase {
   //! \brief Cleans any attachments that have no associated report.
   void CleanOrphanedAttachments();
 
-  //! \brief Attempt to remove any attachments associated with the given report UUID.
+  //! \brief Attempt to remove any attachments associated with the given
+  //!     report UUID.
   //!     There may not be any, so failing is not an error.
   //!
   //! \param[in] uuid The report identifier which attachments to remove.
@@ -688,14 +675,15 @@ void CrashReportDatabase::UploadReport::InitializeAttachments() {
   while ((dir_result = reader.NextFile(&filename)) ==
          DirectoryReader::Result::kSuccess) {
     const base::FilePath filepath(attachments_dir.Append(filename));
-    std::unique_ptr<FileReader> file_reader(std::make_unique<FileReader>());
-    if (!file_reader->Open(filepath)) {
+    std::unique_ptr<FileReader> reader(std::make_unique<FileReader>());
+    if (!reader->Open(filepath)) {
       LOG(ERROR) << "attachment " << base::UTF16ToUTF8(filepath.value())
                  << " couldn't be opened, skipping";
       continue;
     }
-    attachment_readers_.emplace_back(std::move(file_reader));
-    attachment_map_[base::UTF16ToUTF8(filename.value())] = attachment_readers_.back().get();
+    attachment_readers_.emplace_back(std::move(reader));
+    attachment_map_[base::UTF16ToUTF8(filename.value())] =
+      attachment_readers_.back().get();
   }
 }
 
@@ -790,11 +778,9 @@ OperationStatus CrashReportDatabaseWin::LookUpCrashReport(const UUID& uuid,
     return kDatabaseError;
   // Find and return a copy of the matching report.
   const ReportDisk* report_disk;
-  const OperationStatus os = metadata->FindSingleReport(uuid, &report_disk);
+  OperationStatus os = metadata->FindSingleReport(uuid, &report_disk);
   if (os == kNoError)
     *report = *report_disk;
-  if (os == kReportNotFound)
-    RemoveAttachmentsByUUID(uuid);
   return os;
 }
 
@@ -896,13 +882,13 @@ OperationStatus CrashReportDatabaseWin::DeleteReport(const UUID& uuid) {
   if (os != kNoError)
     return os;
 
-  RemoveAttachmentsByUUID(uuid);
-
   if (!DeleteFile(report_path.value().c_str())) {
     PLOG(ERROR) << "DeleteFile "
                 << base::UTF16ToUTF8(report_path.value());
     return kFileSystemError;
   }
+
+  RemoveAttachmentsByUUID(uuid);
 
   return kNoError;
 }
@@ -929,12 +915,10 @@ OperationStatus CrashReportDatabaseWin::SkipReportUpload(
 
 std::unique_ptr<Metadata> CrashReportDatabaseWin::AcquireMetadata() {
   base::FilePath metadata_file = base_dir_.Append(kMetadataFileName);
-  return Metadata::Create(metadata_file,
-                          base_dir_.Append(kReportsDirectory));
+  return Metadata::Create(metadata_file, base_dir_.Append(kReportsDirectory));
 }
 
-void CrashReportDatabaseWin::CleanOrphanedAttachments()
-{
+void CrashReportDatabaseWin::CleanOrphanedAttachments() {
   base::FilePath root_attachments_dir(base_dir_.Append(kAttachmentsDirectory));
   DirectoryReader reader;
   if (!reader.Open(root_attachments_dir)) {
@@ -954,7 +938,8 @@ void CrashReportDatabaseWin::CleanOrphanedAttachments()
     if (IsDirectory(path, false)) {
       UUID uuid;
       if (!uuid.InitializeFromString(filename.value())) {
-        LOG(ERROR) << "unexpected attachment dir name " << base::UTF16ToUTF8(filename.value());
+        LOG(ERROR) << "unexpected attachment dir name "
+                   << base::UTF16ToUTF8(filename.value());
         continue;
       }
 
@@ -971,8 +956,7 @@ void CrashReportDatabaseWin::CleanOrphanedAttachments()
   }
 }
 
-void CrashReportDatabaseWin::RemoveAttachmentsByUUID(const UUID &uuid)
-{
+void CrashReportDatabaseWin::RemoveAttachmentsByUUID(const UUID &uuid) {
   base::FilePath attachments_dir = AttachmentsPath(uuid);
   DirectoryReader reader;
   if (!reader.Open(attachments_dir)) {

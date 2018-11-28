@@ -45,7 +45,6 @@
 #include "client/simple_string_dictionary.h"
 #include "handler/crash_report_upload_thread.h"
 #include "handler/prune_crash_reports_thread.h"
-#include "base/strings/utf_string_conversions.h"
 #include "tools/tool_support.h"
 #include "util/file/file_io.h"
 #include "util/misc/address_types.h"
@@ -152,7 +151,7 @@ void Usage(const base::FilePath& me) {
 "                              only if uploads are enabled for the database\n"
 #if defined(OS_WIN) || defined(OS_FUCHSIA)
 "      --attachment=NAME=PATH  attach a copy of a file, along with a crash dump\n"
-#endif
+#endif // OS_WIN || OS_FUCHSIA
 "      --help                  display this help and exit\n"
 "      --version               output version information and exit\n",
           me.value().c_str());
@@ -208,6 +207,7 @@ bool AddKeyValueToMap(std::map<std::string, std::string>* map,
   }
   return true;
 }
+
 #if defined(OS_WIN) || defined(OS_FUCHSIA)
 // Overloaded version, to accept base::FilePath as a VALUE.
 bool AddKeyValueToMap(std::map<std::string, base::FilePath>* map,
@@ -233,7 +233,8 @@ bool AddKeyValueToMap(std::map<std::string, base::FilePath>* map,
   }
   return true;
 }
-#endif
+#endif // OS_WIN || OS_FUCHSIA
+
 // Calls Metrics::HandlerLifetimeMilestone, but only on the first call. This is
 // to prevent multiple exit events from inadvertently being recorded, which
 // might happen if a crash occurs during destruction in what would otherwise be
@@ -573,7 +574,7 @@ int HandlerMain(int argc,
     kOptionURL,
 #if defined(OS_WIN) || defined(OS_FUCHSIA)
     kOptionAttachment,
-#endif
+#endif // OS_WIN || OS_FUCHSIA
     // Standard options.
     kOptionHelp = -2,
     kOptionVersion = -3,
@@ -634,7 +635,7 @@ int HandlerMain(int argc,
     {"url", required_argument, nullptr, kOptionURL},
 #if defined(OS_WIN) || defined(OS_FUCHSIA)
     {"attachment", required_argument, nullptr, kOptionAttachment},
-#endif
+#endif // OS_WIN || OS_FUCHSIA
     {"help", no_argument, nullptr, kOptionHelp},
     {"version", no_argument, nullptr, kOptionVersion},
     {nullptr, 0, nullptr, 0},
@@ -779,7 +780,7 @@ int HandlerMain(int argc,
         }
         break;
       }
-#endif
+#endif // OS_WIN || OS_FUCHSIA
       case kOptionHelp: {
         Usage(me);
         MetricsRecordExit(Metrics::LifetimeMilestone::kExitedEarly);
@@ -906,7 +907,7 @@ int HandlerMain(int argc,
 #if defined(OS_WIN) || defined(OS_FUCHSIA)
       // TODO(scottmg): for all platforms.
       &options.attachments,
-#endif
+#endif // OS_WIN || OS_FUCHSIA
       user_stream_sources);
 
  #if defined(OS_LINUX) || defined(OS_ANDROID)
