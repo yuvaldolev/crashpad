@@ -72,7 +72,7 @@ struct UUID {
   //!     with a message logged.
   bool InitializeWithNew();
 
-#if defined(OS_WIN) || DOXYGEN
+#if defined(OS_WIN) || (defined(DOXYGEN) && DOXYGEN)
   //! \brief Initializes the %UUID from a system `UUID` or `GUID` structure.
   //!
   //! \param[in] system_uuid A system `UUID` or `GUID` structure.
@@ -84,7 +84,7 @@ struct UUID {
   //! \return A string of the form `"00112233-4455-6677-8899-aabbccddeeff"`.
   std::string ToString() const;
 
-#if defined(OS_WIN) || DOXYGEN
+#if defined(OS_WIN) || (defined(DOXYGEN) && DOXYGEN)
   //! \brief The same as ToString, but returned as a string16.
   base::string16 ToString16() const;
 #endif  // OS_WIN

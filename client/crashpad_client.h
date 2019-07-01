@@ -116,7 +116,7 @@ class CrashpadClient {
                     bool restartable,
                     bool asynchronous_start);
 
-#if defined(OS_ANDROID) || DOXYGEN
+#if defined(OS_ANDROID) || (defined(DOXYGEN) && DOXYGEN)
   //! \brief Installs a signal handler to execute `/system/bin/app_process` and
   //!     load a Java class in response to a crash.
   //!
@@ -285,7 +285,7 @@ class CrashpadClient {
       int socket);
 #endif  // OS_ANDROID || DOXYGEN
 
-#if defined(OS_LINUX) || defined(OS_ANDROID) || DOXYGEN
+#if defined(OS_LINUX) || defined(OS_ANDROID) || (defined(DOXYGEN) && DOXYGEN)
   //! \brief Installs a signal handler to launch a handler process in reponse to
   //!     a crash.
   //!
@@ -440,7 +440,7 @@ class CrashpadClient {
   base::mac::ScopedMachSendRight GetHandlerMachPort() const;
 #endif
 
-#if defined(OS_WIN) || DOXYGEN
+#if defined(OS_WIN) || (defined(DOXYGEN) && DOXYGEN)
   //! \brief Sets the IPC pipe of a presumably-running Crashpad handler process
   //!     which was started with StartHandler() or by other compatible means
   //!     and does an IPC message exchange to register this process with the
